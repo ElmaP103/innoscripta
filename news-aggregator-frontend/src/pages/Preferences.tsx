@@ -1,112 +1,134 @@
 import React, { useState } from "react";
 import {
   Box,
-  Paper,
-  Typography,
-  FormControl,
-  InputLabel,
+  Button,
   Select,
   MenuItem,
+  FormControl,
+  InputLabel,
   TextField,
-  Button,
-  OutlinedInput,
-  SelectChangeEvent,
-  Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-const Preferences: React.FC = () => {
-  const [source, setSource] = useState<string>("");
-  const [category, setCategory] = useState<string>("");
-  const [author, setAuthor] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+const Preferences = () => {
+  const [source, setSource] = useState("");
+  const [category, setCategory] = useState("");
+  const [author, setAuthor] = useState("");
   const navigate = useNavigate();
 
-  const handleSourceChange = (event: SelectChangeEvent) => {
-    setSource(event.target.value);
-  };
-
-  const handleCategoryChange = (event: SelectChangeEvent) => {
-    setCategory(event.target.value);
-  };
-
-  const handleSave = async () => {
+  const handleSavePreferences = async () => {
     try {
-      setLoading(true);
-      const response = await fetch("http://localhost:8000/api/preferences", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          sources: source ? [source] : [],
-          categories: category ? [category] : [],
-          authors: author.trim() ? [author.trim()] : [],
-        }),
+      localStorage.removeItem("filteredArticles");
+      navigate("/dashboard", {
+        state: { articles: [], isPreferenceResult: true },
       });
+
+      const preferencesData = {
+        sources: source ? [source] : [],
+        categories: category ? [category] : [],
+        authors: author.trim() ? [author.trim()] : [],
+      };
+
+      const response = await fetch(
+        "http://localhost:8000/api/user-preferences",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(preferencesData),
+        }
+      );
 
       const result = await response.json();
 
-      if (response.ok && result.status === "success") {
-        // Navigate to dashboard with articles
-        navigate("/dashboard", {
-          state: { articles: result.data.articles },
-        });
+      if (response.ok) {
+        if (!result.data.articles || result.data.articles.length === 0) {
+          navigate("/dashboard", {
+            state: {
+              articles: [],
+              isPreferenceResult: true,
+              showNoResults: true,
+              message: "No articles found matching your preferences.",
+            },
+          });
+        } else {
+          localStorage.setItem(
+            "filteredArticles",
+            JSON.stringify(result.data.articles)
+          );
+          navigate("/dashboard", {
+            state: { articles: result.data.articles, isPreferenceResult: true },
+          });
+        }
       } else {
-        setError(result.message || "Failed to save preferences");
+        console.error("Failed to save preferences:", result.message);
+        navigate("/dashboard", {
+          state: {
+            articles: [],
+            isPreferenceResult: true,
+            showNoResults: true,
+            message: "Failed to save preferences",
+          },
+        });
       }
     } catch (error) {
       console.error("Failed to save preferences:", error);
-      setError("Failed to save preferences");
-    } finally {
-      setLoading(false);
+      navigate("/dashboard", {
+        state: {
+          articles: [],
+          isPreferenceResult: true,
+          showNoResults: true,
+          message: "Failed to save preferences",
+        },
+      });
     }
   };
 
   return (
-    <Paper sx={{ p: 3 }}>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      <Typography variant="h5" gutterBottom>
-        News Preferences
-      </Typography>
+    <Box
+      component="form"
+      sx={{
+        width: "100%",
+        p: 2,
+      }}
+    >
       <Box
-        component="form"
         sx={{
           display: "flex",
           gap: 2,
-          flexWrap: "wrap",
-          alignItems: "flex-start",
-          mt: 2,
+          alignItems: "center",
+          mb: 2,
         }}
       >
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Source (Optional)</InputLabel>
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel>Source</InputLabel>
           <Select
             value={source}
-            onChange={handleSourceChange}
-            input={<OutlinedInput label="Source (Optional)" />}
+            onChange={(e) => setSource(e.target.value)}
+            label="Source"
           >
-            <MenuItem value="">None</MenuItem>
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
             <MenuItem value="BBC News">BBC News</MenuItem>
             <MenuItem value="CNN">CNN</MenuItem>
             <MenuItem value="ABC News">ABC News</MenuItem>
           </Select>
         </FormControl>
 
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Category (Optional)</InputLabel>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel>Category</InputLabel>
           <Select
             value={category}
-            onChange={handleCategoryChange}
-            input={<OutlinedInput label="Category (Optional)" />}
+            onChange={(e) => setCategory(e.target.value)}
+            label="Category"
           >
-            <MenuItem value="">None</MenuItem>
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
             <MenuItem value="general">General</MenuItem>
             <MenuItem value="business">Business</MenuItem>
             <MenuItem value="sports">Sports</MenuItem>
@@ -114,18 +136,26 @@ const Preferences: React.FC = () => {
         </FormControl>
 
         <TextField
-          label="Preferred Author (Optional)"
-          placeholder="Enter author name (optional)"
+          size="small"
+          label="Author"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
-          sx={{ minWidth: 200 }}
+          sx={{ minWidth: 120 }}
         />
 
-        <Button variant="contained" onClick={handleSave} sx={{ height: 56 }}>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={handleSavePreferences}
+          sx={{
+            textTransform: "none",
+            height: 40,
+          }}
+        >
           Save Preferences
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
 };
 

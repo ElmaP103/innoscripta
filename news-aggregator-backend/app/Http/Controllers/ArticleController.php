@@ -57,39 +57,109 @@ class ArticleController extends Controller
     public function search(Request $request)
     {
         try {
+            $searchTerm = $request->query('search');
+            $source = $request->query('source');
+            $category = $request->query('category');
+            $author = $request->query('author');
+            $date = $request->query('date');
+
+            \Log::info('Search parameters received:', [
+                'search' => $searchTerm,
+                'source' => $source,
+                'category' => $category,
+                'author' => $author,
+                'date' => $date
+            ]);
+
             $query = Article::query();
 
-            if ($request->has('search')) {
-                $searchTerm = strtolower($request->search);
-                $query->where(function ($q) use ($searchTerm) {
-                    $q->whereRaw('LOWER(title) LIKE ?', ['%' . $searchTerm . '%'])
-                        ->orWhereRaw('LOWER(description) LIKE ?', ['%' . $searchTerm . '%']);
-                });
-            }
+            // Start a single where clause that combines all conditions with AND
+            $query->where(function ($mainQuery) use ($searchTerm, $source, $category, $author, $date) {
+                // Search term condition (title OR content)
+                if ($searchTerm) {
+                    $searchLower = strtolower($searchTerm);
+                    $mainQuery->where(function ($q) use ($searchLower) {
+                        $q->where('title', 'like', '%' . $searchLower . '%')
+                            ->orWhere('content', 'like', '%' . $searchLower . '%');
+                    });
+                }
 
-            if ($request->has('category')) {
-                $query->whereRaw('LOWER(category) = ?', [strtolower($request->category)]);
-            }
+                // AND source condition
+                if ($source) {
+                    $mainQuery->where('source', $source);
+                }
 
-            if ($request->has('date')) {
-                $query->whereDate('published_at', $request->date);
-            }
+                // AND category condition
+                if ($category) {
+                    $mainQuery->where('category', $category);
+                }
 
-            if ($request->has('source')) {
-                $query->whereRaw('LOWER(source) = ?', [strtolower($request->source)]);
-            }
+                // AND author condition
+                if ($author) {
+                    $mainQuery->where('author', $author);
+                }
 
-            $articles = $query->latest('published_at')->paginate(10);
+                // AND date condition
+                if ($date) {
+                    $searchDate = date('Y-m-d', strtotime($date));
+                    $mainQuery->whereRaw('DATE(published_at) = ?', [$searchDate]);
+                }
+            });
+
+            // Log the constructed query
+            \Log::info('Final search query:', [
+                'sql' => $query->toSql(),
+                'bindings' => $query->getBindings()
+            ]);
+
+            // Get sample of matching data
+            $sampleBeforeExecution = $query->limit(3)->get();
+            \Log::info('Sample matching data:', [
+                'sample_count' => $sampleBeforeExecution->count(),
+                'samples' => $sampleBeforeExecution->map(function ($article) {
+                    return [
+                        'id' => $article->id,
+                        'title' => $article->title,
+                        'source' => $article->source,
+                        'category' => $article->category,
+                        'author' => $article->author,
+                        'published_at' => $article->published_at
+                    ];
+                })
+            ]);
+
+            // Execute final paginated query
+            $articles = $query->latest('published_at')->paginate(15);
+
+            // Log results
+            \Log::info('Search results:', [
+                'total_results' => $articles->total(),
+                'current_page' => $articles->currentPage(),
+                'per_page' => $articles->perPage(),
+                'conditions_used' => [
+                    'search_term' => !empty($searchTerm),
+                    'source' => !empty($source),
+                    'category' => !empty($category),
+                    'author' => !empty($author),
+                    'date' => !empty($date)
+                ]
+            ]);
 
             return response()->json([
                 'status' => 'success',
                 'data' => $articles
             ]);
+
         } catch (\Exception $e) {
-            \Log::error('Search error: ' . $e->getMessage());
+            \Log::error('Search error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to perform search'
+                'message' => 'Failed to search articles: ' . $e->getMessage()
             ], 500);
         }
     }

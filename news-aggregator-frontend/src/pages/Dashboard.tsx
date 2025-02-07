@@ -19,15 +19,15 @@ const Dashboard = () => {
 
   const fetchAllArticles = async () => {
     try {
-      console.log("Fetching articles..."); // Debug log
-      const response = await fetch("http://localhost:8000/api/articles", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await fetch(
+        "http://localhost:8000/api/articles/filtered",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       const data = await response.json();
-      console.log("Articles response:", data); // Debug log
-
       if (response.ok) {
         setArticles(data);
       }
@@ -38,9 +38,8 @@ const Dashboard = () => {
     }
   };
 
-  // Always fetch articles when Dashboard mounts
+  // Fetch articles immediately on component mount
   useEffect(() => {
-    console.log("Dashboard mounted, fetching articles..."); // Debug log
     fetchAllArticles();
   }, []); // Empty dependency array means this runs once on mount
 
@@ -60,17 +59,12 @@ const Dashboard = () => {
     <Container maxWidth="lg">
       <Box sx={{ mt: 4, mb: 4 }}>
         <Paper sx={{ p: 3 }}>
-          {loading ? (
-            <Box sx={{ textAlign: "center", py: 2 }}>Loading articles...</Box>
-          ) : articles.data && articles.data.length > 0 ? (
-            <ArticleList
-              articles={articles}
-              onPageChange={(page) => {
-                // Handle pagination if needed
-              }}
-            />
+          {articles.data && articles.data.length > 0 ? (
+            <ArticleList articles={articles} onPageChange={handlePageChange} />
           ) : (
-            <Box sx={{ textAlign: "center", py: 2 }}>No articles found</Box>
+            <Box sx={{ textAlign: "center", py: 2 }}>
+              {loading ? "Loading articles..." : "No articles found"}
+            </Box>
           )}
         </Paper>
       </Box>

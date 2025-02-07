@@ -14,16 +14,16 @@ Route::prefix('api')->group(function () {
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
         // Article routes
-        Route::get('/articles', [ArticleController::class, 'getIndex']);
+        Route::get('/articles', [ArticleController::class, 'index']);
         Route::get('/articles/search', [ArticleController::class, 'search']);
         Route::get('/articles/{article}', [ArticleController::class, 'show']);
-
+        Route::get('/articles/filtered', [ArticleController::class, 'getFilteredArticles']);
 
         // User preference routes
         Route::get('/user-preferences', [UserPreferenceController::class, 'show']);
         Route::put('/user-preferences', [UserPreferenceController::class, 'update']);
-        Route::post('/preferences', [UserPreferenceController::class, 'store']);
-        Route::get('/preferences', [UserPreferenceController::class, 'show']);
+        Route::post('/user-preferences', [UserPreferenceController::class, 'store']);
+
 
         // Authentication routes
         Route::post('/logout', [AuthController::class, 'logout']);

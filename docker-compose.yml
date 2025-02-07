@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+  # Backend service
+  backend:
+    build:
+      context: ./news-aggregator-backend
+      dockerfile: Dockerfile
+    container_name: news-backend
+    restart: unless-stopped
+    environment:
+      - APP_ENV=local
+      - DB_HOST=db
+      - DB_DATABASE=news_aggregator
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./news-aggregator-backend:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - news_network
+
+  # Frontend service
+  frontend:
+    build:
+      context: ./news-aggregator-frontend
+      dockerfile: Dockerfile
+    container_name: news-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./news-aggregator-frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - news_network
+
+  # Database service
+  db:
+    image: mysql:8.0
+    container_name: news-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: news_aggregator
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - news_network
+
+networks:
+  news_network:
+    driver: bridge
+
+volumes:
+  dbdata:

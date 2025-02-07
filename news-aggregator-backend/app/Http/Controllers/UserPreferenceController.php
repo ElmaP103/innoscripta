@@ -2,89 +2,85 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserPreference;
 use App\Models\Article;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\UserPreference;
 
 class UserPreferenceController extends Controller
 {
     public function store(Request $request)
     {
         try {
-            $user = $request->user();
+            // Log the entire request
+            \Log::info('PreferencesController@store called', [
+                'request_method' => $request->method(),
+                'request_headers' => $request->headers->all(),
+                'request_body' => $request->all(),
+                'user_agent' => $request->userAgent()
+            ]);
 
-            // Handle empty values properly
-            $sources = !empty($request->sources) ? implode(',', $request->sources) : null;
-            $categories = !empty($request->categories) ? implode(',', $request->categories) : null;
-            $authors = !empty($request->authors) && !empty($request->authors[0]) ? implode(',', $request->authors) : null;
+            $user = auth()->user();
 
+            // Log user context
+            \Log::info('User context:', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'existing_preferences' => $user->preferences
+            ]);
+
+            // Get the preferences data
+            $sources = $request->input('sources', []);
+            $categories = $request->input('categories', []);
+            $authors = $request->input('authors', []);
+
+            // Log detailed preferences data
+            \Log::info('Processing preferences:', [
+                'sources' => $sources,
+                'categories' => $categories,
+                'authors' => $authors,
+                'sources_type' => gettype($sources),
+                'categories_type' => gettype($categories),
+                'authors_type' => gettype($authors)
+            ]);
+
+            // Update or create preferences
             $preferences = UserPreference::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'sources' => $sources,
-                    'categories' => $categories,
-                    'authors' => $authors
+                    'preferred_sources' => $sources,
+                    'preferred_categories' => $categories,
+                    'preferred_authors' => $authors
                 ]
             );
 
-            // Get articles based on preferences
+            \Log::info('Saved preferences:', [
+                'preference_id' => $preferences->id,
+                'saved_data' => $preferences->toArray(),
+                'was_created' => $preferences->wasRecentlyCreated,
+                'was_updated' => $preferences->wasChanged()
+            ]);
+
+            // Build query for articles based on preferences
             $query = Article::query();
 
             if (!empty($sources)) {
-                $query->whereIn('source', explode(',', $sources));
+                $query->whereIn('source', $preferences->preferred_sources);
             }
             if (!empty($categories)) {
-                $query->whereIn('category', explode(',', $categories));
+                $query->whereIn('category', $preferences->preferred_categories);
             }
             if (!empty($authors)) {
-                $query->whereIn('author', explode(',', $authors));
+                $query->whereIn('author', $preferences->preferred_authors);
             }
 
             $articles = $query->latest('published_at')->paginate(15);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Preferences saved successfully',
-                'data' => [
-                    'preferences' => $preferences,
-                    'articles' => $articles
-                ]
+            // Log the query results
+            \Log::info('Preferences query results:', [
+                'sql' => $query->toSql(),
+                'bindings' => $query->getBindings(),
+                'results_count' => $articles->count()
             ]);
-        } catch (\Exception $e) {
-            \Log::error('Error saving preferences: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to save preferences'
-            ], 500);
-        }
-    }
-
-    public function index(Request $request)
-    {
-        try {
-            $user = $request->user();
-            $preferences = UserPreference::where('user_id', $user->id)->first();
-
-            // Get filtered articles based on stored preferences
-            $query = Article::query();
-
-            if ($preferences) {
-                if (!empty($preferences->sources)) {
-                    $sources = explode(',', $preferences->sources);
-                    $query->whereIn('source', $sources);
-                }
-                if (!empty($preferences->categories)) {
-                    $categories = explode(',', $preferences->categories);
-                    $query->whereIn('category', $categories);
-                }
-                if (!empty($preferences->authors)) {
-                    $authors = explode(',', $preferences->authors);
-                    $query->whereIn('author', $authors);
-                }
-            }
-
-            $articles = $query->latest('published_at')->paginate(15);
 
             return response()->json([
                 'status' => 'success',
@@ -93,11 +89,16 @@ class UserPreferenceController extends Controller
                     'articles' => $articles
                 ]
             ]);
+
         } catch (\Exception $e) {
-            \Log::error('Error fetching preferences: ' . $e->getMessage());
+            \Log::error('Preferences store error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to fetch preferences'
+                'message' => 'Failed to save preferences: ' . $e->getMessage()
             ], 500);
         }
     }

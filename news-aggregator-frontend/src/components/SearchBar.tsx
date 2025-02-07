@@ -41,7 +41,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
 
     try {
       const params = new URLSearchParams({
-        ...(searchTerm && { q: searchTerm }),
+        ...(searchTerm && { search: searchTerm }),
         ...(category && { category }),
         ...(source && { source }),
         ...(date && { date }),
