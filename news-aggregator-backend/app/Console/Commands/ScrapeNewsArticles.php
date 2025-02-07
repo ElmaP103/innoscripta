@@ -30,7 +30,7 @@ class ScrapeNewsArticles extends Command
         $this->scrapeNewsAPI();
         $this->scrapeGuardian();
         $this->scrapeNYTimes();
-        
+
         $count = Article::count();
         $this->info("Total articles: $count");
     }
@@ -39,14 +39,14 @@ class ScrapeNewsArticles extends Command
     {
         try {
             $this->info('Starting NewsAPI scrape...');
-            
+
             $response = Http::withHeaders([
                 'X-Api-Key' => $this->newsApiKey
             ])->timeout(60)->get($this->baseUrl . '/top-headlines', [
-                'country' => 'us',
-                'pageSize' => 20,
-                'language' => 'en'
-            ]);
+                        'country' => 'us',
+                        'pageSize' => 20,
+                        'language' => 'en'
+                    ]);
 
             if ($response->successful()) {
                 $articles = $response->json()['articles'] ?? [];
@@ -58,12 +58,13 @@ class ScrapeNewsArticles extends Command
                             ['url' => $article['url']],
                             [
                                 'title' => $article['title'] ?? '',
-                                'description' => $article['description'] ?? '',
+                                'content' => $article['content'] ?? $article['description'] ?? '',
                                 'source' => $article['source']['name'] ?? 'Unknown',
                                 'published_at' => $article['publishedAt'] ?? now(),
                                 'category' => 'general'
                             ]
                         );
+                        $this->info("Saved article: {$article['title']}");
                     } catch (\Exception $e) {
                         $this->error('Error saving article: ' . $e->getMessage());
                         continue;
