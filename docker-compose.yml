@@ -1,7 +1,5 @@
-version: "3.8"
 
 services:
-  # Backend service
   backend:
     build:
       context: ./news-aggregator-backend
@@ -11,19 +9,20 @@ services:
     environment:
       - APP_ENV=local
       - DB_HOST=db
-      - DB_DATABASE=news_aggregator
+      - DB_DATABASE=laravel
       - DB_USERNAME=root
-      - DB_PASSWORD=root
+      - DB_PASSWORD=
     ports:
       - "8000:8000"
     volumes:
       - ./news-aggregator-backend:/var/www/html
+      # Mount a named volume to persist the vendor folder generated during build
+      - vendor_data:/var/www/html/vendor
     depends_on:
       - db
     networks:
       - news_network
 
-  # Frontend service
   frontend:
     build:
       context: ./news-aggregator-frontend
@@ -40,14 +39,13 @@ services:
     networks:
       - news_network
 
-  # Database service
   db:
     image: mysql:8.0
     container_name: news-db
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: news_aggregator
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: 
     ports:
       - "3306:3306"
     volumes:
@@ -61,3 +59,4 @@ networks:
 
 volumes:
   dbdata:
+  vendor_data:
