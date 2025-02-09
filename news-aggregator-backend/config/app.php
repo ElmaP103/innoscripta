@@ -212,4 +212,8 @@ return [
         // 'ExampleClass' => App\Example\ExampleClass::class,
     ])->toArray(),
 
+    'trusted_proxies' => [
+        '127.0.0.1', // This is the default Docker IP for the host machine
+    ],
+
 ];

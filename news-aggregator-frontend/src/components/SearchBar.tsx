@@ -49,7 +49,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
       });
 
       const response = await fetch(
-        `http://localhost:8000/api/articles/search?${params}`,
+        `http://localhost:8001/api/articles/search?${params}`,
         {
           method: "GET",
           headers: {

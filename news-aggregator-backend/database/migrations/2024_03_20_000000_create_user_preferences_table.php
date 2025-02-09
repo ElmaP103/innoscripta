@@ -11,11 +11,12 @@ class CreateUserPreferencesTable extends Migration
         Schema::create('user_preferences', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->json('preferred_sources')->default('[]');
-            $table->json('preferred_categories')->default('[]');
-            $table->json('preferred_authors')->default('[]');
+            $table->json('preferred_sources')->nullable();  // Nullable JSON column
+            $table->json('preferred_categories')->nullable();  // Nullable JSON column
+            $table->json('preferred_authors')->nullable();  // Nullable JSON column
             $table->timestamps();
         });
+        
     }
 
     public function down()

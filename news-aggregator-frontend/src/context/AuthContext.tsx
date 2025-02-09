@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (storedToken) {
         try {
-          const response = await fetch("http://localhost:8000/api/user", {
+          const response = await fetch("http://localhost:8001/api/user", {
             headers: {
               Authorization: `Bearer ${storedToken}`,
             },

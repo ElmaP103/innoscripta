@@ -20,7 +20,7 @@ const Dashboard = () => {
   const fetchAllArticles = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8000/api/articles/filtered",
+        "http://localhost:8001/api/articles/filtered",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

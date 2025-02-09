@@ -86,7 +86,7 @@ const Signup: React.FC = () => {
       const validatedData = signupSchema.parse(formData);
       setLoading(true);
 
-      const response = await fetch("http://localhost:8000/api/register", {
+      const response = await fetch("http://localhost:8001/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

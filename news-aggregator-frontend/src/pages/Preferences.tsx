@@ -30,7 +30,7 @@ const Preferences = () => {
       };
 
       const response = await fetch(
-        "http://localhost:8000/api/user-preferences",
+        "http://localhost:8001/api/user-preferences",
         {
           method: "POST",
           headers: {

@@ -40,8 +40,8 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Expose port 8000
-EXPOSE 8000
+# Expose port 8001
+EXPOSE 8001
 
 # Use the entrypoint script and run artisan serve
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

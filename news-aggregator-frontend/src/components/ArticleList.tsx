@@ -34,7 +34,7 @@ const ArticleList: React.FC<ArticleListProps> = ({
   const handleArticleClick = async (article: Article) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/articles/${article.id}`,
+        `http://localhost:8001/api/articles/${article.id}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

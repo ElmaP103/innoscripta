@@ -13,7 +13,7 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=
     ports:
-      - "8000:8000"
+      - "8001:8001"
     volumes:
       - ./news-aggregator-backend:/var/www/html
       # Mount a named volume to persist the vendor folder generated during build
@@ -45,10 +45,11 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: laravel
-      MYSQL_ROOT_PASSWORD: 
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"  
     ports:
       - "3306:3306"
     volumes:
+      - ./news-aggregator-backend:/var/www/html
       - dbdata:/var/lib/mysql
     networks:
       - news_network

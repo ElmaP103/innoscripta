@@ -23,4 +23,4 @@ fi
 
 # Start Laravel server
 echo "Starting Laravel application..."
-exec "$@"
+exec exec php artisan serve:withscheduler --host=0.0.0.0 --port=8001
