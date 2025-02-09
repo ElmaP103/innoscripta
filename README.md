@@ -2,59 +2,40 @@
 
 News Aggregator is a full‑stack application designed to aggregate and display news from diverse sources. It features a Laravel-based backend API and a React‑based frontend for a responsive user experience. The entire project is containerized using Docker and orchestrated through Docker Compose for ease of development, testing, and deployment.
 
----
 
 ## Table of Contents
 
 - [Features](#features)
-- [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
   - [Cloning the Repository](#cloning-the-repository)
   - [Environment Setup](#environment-setup)
-- [Project Structure](#project-structure)
 - [Docker Setup](#docker-setup)
   - [Backend](#backend)
-  - [Frontend](#frontend)
   - [Database](#database)
 - [Running the Application](#running-the-application)
-- [Database Migrations](#database-migrations)
 - [Troubleshooting](#troubleshooting)
 - [Common Commands](#common-commands)
 - [License](#license)
+- [Setup and Running without Docker](#setup-and-running-without-docker)
 
----
 
 ## Features
 
-- **Personalized News Feed:** Displays news tailored to user-selected preferences.
-- **User Authentication:** Secure login and registration using Laravel's built-in auth.
-- **Responsive UI:** Modern, dynamic interface built with React and Material‑UI.
-- **API Integration:** Aggregates news via external sources and APIs.
-- **Dockerized Environment:** Simplifies setup and environment consistency with Docker & Docker Compose.
-- **Data Persistence:** Uses MySQL managed with Laravel migrations and Eloquent models for data integrity.
+- Personalized News Feed: Displays news tailored to user-selected preferences.
+- User Authentication: Secure login and registration using Laravel's built-in auth.
+- Responsive UI with React and Material‑UI.
+- API Integration: Aggregates news via external sources and APIs.
+- Dockerized Environment: Simplifies setup and environment consistency with Docker & Docker Compose.
+- Data Persistence: Uses MySQL managed with Laravel migrations and Eloquent models for data integrity.
 
----
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed on your system:
-
-- [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- Optional: Git (to clone the repository)
-
----
 
 ## Getting Started
 
 ### Cloning the Repository
 
-Clone this repository to your local environment:
+git clone https://github.com/ElmaP103/innoscripta
+cd innoscripta
 
-```bash
-git clone https://github.com/yourusername/news-aggregator.git
-cd news-aggregator
-```
 
 ### Environment Setup
 
@@ -70,56 +51,18 @@ cd news-aggregator
    APP_ENV=local
    APP_KEY=
    APP_DEBUG=true
-   APP_URL=http://localhost:8000
+   APP_URL=http://localhost
 
    DB_CONNECTION=mysql
    DB_HOST=db
    DB_PORT=3306
    DB_DATABASE=news_aggregator
    DB_USERNAME=root
-   DB_PASSWORD=root
+   DB_PASSWORD=
    ```
-
-#### Frontend
-
-1. Navigate to the `news-aggregator-frontend` directory.
-2. Create a `.env` file to configure environment variables, such as:
-   
-   ```env
-   REACT_APP_API_URL=http://localhost:8000/api
-   ```
-
----
-
-## Project Structure
-
-```
-news-aggregator/
-├── docker-compose.yml
-├── README.md
-├── news-aggregator-backend/
-│   ├── Dockerfile
-│   ├── .env.example
-│   ├── app/                # Laravel application code
-│   ├── bootstrap/          # Contains bootstrap/app.php and related files
-│   ├── config/             # Application configuration
-│   ├── database/           # Migrations, seeds, and factories
-│   ├── public/             # Public assets
-│   ├── resources/          # Views, language files, etc.
-│   ├── routes/             # Web and API routes
-│   └── ...                 # Other Laravel directories/files
-├── news-aggregator-frontend/
-│   ├── Dockerfile
-│   ├── public/
-│   ├── src/                # React source code
-│   └── ...                 # Other frontend files
-```
-
----
+   You should also set NEWS_API_KEY in .env from NewsAPI.org.
 
 ## Docker Setup
-
-This project leverages Docker containers to standardize the development environment.
 
 ### Backend
 
@@ -140,102 +83,27 @@ This project leverages Docker containers to standardize the development environm
   - Uses official MySQL 8.0 image.
   - Persists data in a named volume (`dbdata`).
 
-#### Sample `docker-compose.yml` Excerpt
-
-```yaml
-version: "3.8"
-
-services:
-  backend:
-    build:
-      context: ./news-aggregator-backend
-      dockerfile: Dockerfile
-    container_name: news-backend
-    restart: unless-stopped
-    environment:
-      - APP_ENV=local
-      - DB_HOST=db
-      - DB_DATABASE=news_aggregator
-      - DB_USERNAME=root
-      - DB_PASSWORD=root
-    ports:
-      - "8000:8000"
-    volumes:
-      - backend_data:/var/www/html
-    depends_on:
-      - db
-    networks:
-      - news_network
-
-  frontend:
-    build:
-      context: ./news-aggregator-frontend
-      dockerfile: Dockerfile
-    container_name: news-frontend
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./news-aggregator-frontend:/app
-      - /app/node_modules
-    depends_on:
-      - backend
-    networks:
-      - news_network
-
-  db:
-    image: mysql:8.0
-    container_name: news-db
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: news_aggregator
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
-    networks:
-      - news_network
-
-networks:
-  news_network:
-    driver: bridge
-
-volumes:
-  dbdata:
-  backend_data:
-```
-
----
-
+###
 ## Running the Application
 
 From the project root, run the following command to build and start the containers:
-
 ```bash
 docker-compose up -d --build
-```
 
 This command will:
 
 - Build the backend, frontend, and database containers.
 - Initialize the Laravel application (including copying a backup for repopulation if needed).
-- Expose the Laravel backend at [http://localhost:8000](http://localhost:8000) and the React frontend at [http://localhost:3000](http://localhost:3000).
+- Expose the Laravel backend at [http://localhost:8001](http://localhost:8001) and the React frontend at [http://localhost:3000](http://localhost:3000).
 
----
 
 ## Database Migrations
 
 After the containers are up, run the following command to set up your database schema:
 
-```bash
 docker-compose exec backend php artisan migrate
-```
 
 > **Note:**  
-> If you encounter any migration errors related to JSON columns (e.g. default values on JSON columns are not allowed by MySQL), see the [Troubleshooting](#troubleshooting) section.
-
----
 
 ## Troubleshooting
 
@@ -243,19 +111,19 @@ docker-compose exec backend php artisan migrate
 
 - **Issue:**  
   If you encounter an error similar to:
-  ```
+
   Failed to open required '/var/www/html/bootstrap/app.php'
-  ```
+
   it likely means that the persistent volume (`backend_data`) is overriding the container's filesystem and the local directory does not include the required files.
   
 - **Solution:**  
   The backend container's `entrypoint.sh` script will check if the critical directory (like `bootstrap`) is missing. If found missing or empty, the script copies a backup from `/app-original` (populated during the build) into `/var/www/html`. If you still see errors, try removing old volumes:
   
-  ```bash
+```bash
   docker-compose down -v
   docker system prune -a --volumes
   docker-compose up -d --build
-  ```
+
 
 ### Migration Errors with JSON Columns
 
@@ -305,42 +173,64 @@ class UserPreference extends Model
         return $value ? json_decode($value, true) : [];
     }
 }
-```
-
----
+or you can modify the migration to remove the default value.
+you should consider the following:(in database/migrations/_**_**_**_create_user_preferences_table.php)
+ public function up()
+    {
+        Schema::create('user_preferences', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->json('preferred_sources')->nullable();  // Nullable JSON column
+            $table->json('preferred_categories')->nullable();  // Nullable JSON column
+            $table->json('preferred_authors')->nullable();  // Nullable JSON column
+            $table->timestamps();
+        });
 
 ## Common Commands
 
 - **Access Backend Container:**
-  ```bash
+```bash
   docker-compose exec backend bash
-  ```
   
 - **Run Artisan Commands (e.g., migration, key generation, etc.):**
   ```bash
   docker-compose exec backend php artisan <command>
-  ```
+  
   
 - **View Container Logs:**
   ```bash
   docker-compose logs -f backend
   docker-compose logs -f frontend
-  ```
+  
   
 - **Stop Containers:**
   ```bash
   docker-compose down
-  ```
+  
 
 - **Clean Up Docker System (use carefully):**
   ```bash
   docker system prune -a --volumes
-  ```
 
----
-
-## License
-
-This project is open-sourced under the [MIT License](LICENSE).
-
---- 
+  ##setup-and-running-without-docker
+    ### Prerequisites
+        - PHP 8.1 or higher
+        - Composer
+        - Node.js 16+ and npm
+        - MySQL 8.0
+        - Git
+    ### Backend Setup
+         cd news-aggregator-backend
+         composer install
+         cp .env.example .env
+         php artisan key:generate
+         php artisan migrate
+         php artisan serve:withscheduler
+         
+    ### Frontend Setup
+         cd news-aggregator-frontend
+         npm install (npm install)
+         npm start
+         
+         
+         
